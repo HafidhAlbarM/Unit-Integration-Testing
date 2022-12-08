@@ -5,6 +5,8 @@ const newTodo = require("../mock-data/new-todo.json");
 
 const endpointUrl = "/todos/";
 
+let firstTodo;
+
 describe(endpointUrl, () => {
   test(`GET ${endpointUrl}`, async () => {
     const response = await request(app).get(endpointUrl);
@@ -12,13 +14,30 @@ describe(endpointUrl, () => {
     expect(typeof response.body).toBeTruthy();
     expect(response.body[0].title).toBeDefined();
     expect(response.body[0].done).toBeDefined();
+    firstTodo = response.body[0];
   });
+
+  test(`GET todo by id ${endpointUrl}:todoId`, async () => {
+    const response = await request(app).get(endpointUrl + firstTodo._id);
+    expect(response.statusCode).toBe(200);
+    expect(response.body.title).toBe(firstTodo.title);
+    expect(response.body.done).toBe(firstTodo.done);
+  });
+
+  test(`GET todo by id dosen't exists ${endpointUrl}:todoId`, async () => {
+    const response = await request(app).get(
+      `${endpointUrl}638eab36daa6669c0e186fa5`
+    );
+    expect(response.statusCode).toBe(404);
+  });
+
   it(`POST ${endpointUrl}`, async () => {
     const response = await request(app).post(endpointUrl).send(newTodo);
     expect(response.statusCode).toBe(201);
     expect(response.body.title).toBe(newTodo.title);
     expect(response.body.done).toBe(newTodo.done);
   });
+
   it(`should return error 500 on malformed data with POST ${endpointUrl}`, async () => {
     const response = await await request(app)
       .post(endpointUrl)
